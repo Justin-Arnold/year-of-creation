@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro"
+---
+<BaseLayout>
+    <div class="grid place-items-center h-full">
+        <div class="light"></div>
+    </div>
+</BaseLayout>
+
+<script>
+    const pos = document.documentElement;
+    pos.addEventListener('mousemove', e => {
+        pos.style.setProperty('--x', e.clientX + 'px')
+        pos.style.setProperty('--y', e.clientY + 'px')
+    })
+</script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Open Sans', sans-serif;
+}
+section {
+    position: relative;
+    min-height: 100vh;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+section h2 {
+    color: #a09d9d;
+    font-size: 8em;
+    cursor: default;
+}
+span {
+    color: #ccc;
+    font-size: 5rem;
+    cursor: default;
+}
+.light {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: radial-gradient(circle at var(--x) var(--y),
+     #ffeeaa30 6%, rgba(0,0,0,.985) 10%);
+}
+</style>
