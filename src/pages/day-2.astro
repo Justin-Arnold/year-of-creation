@@ -1,0 +1,255 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { Icon } from "astro-icon"
+---
+
+<BaseLayout>
+    <div class="grid place-items-center h-full">
+        <main class="flex flex-col gap-8 relative z-[1000] font-pacifico text-5xl">
+            <div class=" h-[400px] w-[400px] relative overflow-hidden">
+                <Icon id="fan" name="mdi:fan" class="spin" size="80px"></Icon>
+
+            </div>
+            </div>
+
+        </main>
+    </div>
+    <canvas id="canvas"></canvas>
+</BaseLayout>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+
+    if (!canvas) {
+        console.error('Canvas not found');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    let width: number;
+    let height: number;
+    let forces: V2[] = []
+    let particles: Particle[] = [];
+    let nParticles = 250;
+    let p = 0;
+
+    // perlin.seed(Math.random());
+
+    class V2 {
+
+        x: number;
+        y: number;
+
+        constructor(x?: number, y?: number) {
+            this.x = x || 0;
+            this.y = y || 0;
+        }
+
+        add(vector: {x: number, y: number}) {
+            this.x += vector.x;
+            this.y += vector.y;
+        }
+        reset(x:number, y:number) {
+            this.x = x;
+            this.y = y;
+        }
+        lerp(vector: {x: number, y: number}, n:number) {
+            this.x += (vector.x - this.x)*n;
+            this.y += (vector.y - this.y)*n;
+        }
+    }
+
+    class Particle {
+        position: V2;
+        velocity: V2;
+        acceleration: V2;
+        alpha: number;
+        color: string;
+        points: V2[];
+
+        constructor() {
+            this.position = new V2(-100,-100);
+            this.velocity = new V2();
+            this.acceleration = new V2();
+            this.alpha = 0;
+            this.color = '#000000';
+            this.points = [new V2(-10 + Math.random()*20, -10 + Math.random()*20),
+                        new V2(-10 + Math.random()*20, -10 + Math.random()*20),
+                        new V2(-10 + Math.random()*20, -10 + Math.random()*20)];
+        }
+
+        update() {
+            this.velocity.add(this.acceleration);
+            this.position.add(this.velocity);
+            this.acceleration.reset(0,0);
+            this.alpha -= 0.008;
+            if (this.alpha < 0) this.alpha = 0;
+        }
+
+        follow() {
+            var x = Math.floor(this.position.x / 20);
+            var y = Math.floor(this.position.y / 20);
+            var index = x * Math.floor(height/20) + y;
+            var force = forces[index];
+            if (force) this.applyForce(force);
+        }
+
+        applyForce(force: {x: number, y: number}) {
+            this.acceleration.add(force);
+        }
+
+        draw() {
+            if (ctx === null) return;
+            ctx.globalAlpha = this.alpha;
+            ctx.beginPath();
+            ctx.moveTo(this.position.x+this.points[0]!.x, this.position.y+this.points[0]!.y);
+            ctx.lineTo(this.position.x+this.points[1]!.x, this.position.y+this.points[1]!.y);
+            ctx.lineTo(this.position.x+this.points[2]!.x, this.position.y+this.points[2]!.y);
+            ctx.closePath();
+            ctx.fillStyle = this.color;
+            ctx.fill();
+        }
+    }
+
+    const resize = () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        initForces();
+    }
+
+    const initForces = () => {
+    var i = 0;
+    for (var x = 0; x < width; x+=20) {
+        for (var y = 0; y < height; y+=20) {
+        if (!forces[i]) forces[i] = new V2();
+        i++;
+        }
+    }
+
+    if (i < forces.length) {
+        forces.splice(i+1);
+    }
+    }
+
+    //get center of fan
+    const fanElement = document.getElementById('fan')
+    const fanElementCenter = fanElement?.getBoundingClientRect();
+    let fanCenter = new V2(fanElementCenter?.x! + fanElementCenter?.width!/2, fanElementCenter?.y! + fanElementCenter?.height!/2);
+
+    const updateFanCenter = () => {
+        const fanElementCenter = fanElement?.getBoundingClientRect();
+        fanCenter.x = fanElementCenter?.left! + window.scrollX + fanElementCenter?.width! / 2;
+        fanCenter.y = fanElementCenter?.top! + window.scrollY + fanElementCenter?.height! / 2;
+
+
+
+
+        // console.log(fanCenter);
+    };
+
+    const updateForces = () => {
+    var i = 0;
+    for (var x = 0; x < width; x += 20) {
+        for (var y = 0; y < height; y += 20) {
+            // Calculate vector pointing away from the fan
+            let dx = x - fanCenter.x;
+            let dy = y - fanCenter.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Calculate force magnitude inversely proportional to distance
+            // Ensure that you do not divide by zero when the distance is very small
+            let forceMagnitude = distance > 0 ? 1 / distance : 1;
+
+            // The force should be stronger when closer to the fan
+            // You can adjust the strength of the force by changing the coefficient (e.g., 50)
+            forceMagnitude *= 50; // Adjust this value as needed
+
+            // Normalize and scale the force
+            let fx = (dx / distance) * forceMagnitude;
+            let fy = (dy / distance) * forceMagnitude;
+
+            // Set the force for the current grid point
+            if (forces[i]) forces[i]!.reset(fx, fy);
+            i++;
+        }
+    }
+}
+
+    const initParticles = () => {
+        for (var i = 0; i < nParticles; i++) {
+            particles.push(new Particle());
+            particles[i]!.velocity.y = 0.1;
+        }
+    }
+
+    const drawParticles = () => {
+        for (var i = 0; i < nParticles; i++) {
+            particles[i]!.update();
+            particles[i]!.follow();
+            particles[i]!.draw();
+        }
+    }
+
+    const launchParticle = () => {
+        particles[p]!.position.reset(emitter.x, emitter.y);
+        particles[p]!.velocity.reset(-1+ Math.random()*2, -1+Math.random()*2);
+        particles[p]!.color = `hsl(${Math.floor(emitter.x/width*256)},40%,${60+Math.random()*20}%)`;
+        particles[p]!.alpha = 1;
+        p++;
+        if (p === nParticles) p = 0;
+    }
+
+    const updateEmitter = () => {
+        emitter.lerp(mouse, 0.2);
+    }
+
+    const animate = () => {
+        updateFanCenter();
+        ctx!.clearRect(0, 0, width, height);
+        updateEmitter();
+        launchParticle();
+        launchParticle();
+        updateForces();
+        drawParticles();
+        requestAnimationFrame(animate);
+    }
+
+    const pointerMove = (e:any) => {
+    mouse.x = e.touches ? e.touches[0].pageX : e.pageX;
+    mouse.y = e.touches ? e.touches[0].pageY : e.pageY;
+    }
+
+    let mouse = new V2(window.innerWidth/2, window.innerHeight/2);
+    let emitter = new V2(window.innerWidth/2, window.innerHeight/2);
+    resize();
+    initParticles();
+    requestAnimationFrame(animate);
+
+    window.addEventListener('resize', () =>{
+        resize();
+        updateFanCenter();
+    });
+    window.addEventListener('mousemove', pointerMove);
+    window.addEventListener('touchmove', pointerMove);
+});
+</script>
+
+<style>
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+.spin {
+    animation: spin .5s linear infinite;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+</style>
