@@ -1,0 +1,11 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import NuMineSweeper from "../components/NuMineSweeper.vue";
+---
+
+<BaseLayout>
+    <div class="h-full grid place-items-center">
+        <NuMineSweeper client:visible />
+    </div>
+</BaseLayout>
+
