@@ -1,6 +1,11 @@
 ---
 
 const dayPages = await Astro.glob('../pages/day-*.astro')
+dayPages.sort((a, b) => {
+    const aNum = parseInt(a.url?.split('-')[1]!)
+    const bNum = parseInt(b.url?.split('-')[1]!)
+    return aNum - bNum
+})
 
 const currentRoute = Astro.url.pathname
 ---
