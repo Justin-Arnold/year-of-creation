@@ -1,0 +1,10 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PixelPet from "../components/PixelPet.vue";
+---
+
+<BaseLayout>
+    <div class="h-full grid place-items-center">
+        <PixelPet client:visible />
+    </div>
+</BaseLayout>
