@@ -1,0 +1,10 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ParkourRunner from "../components/ParkourRunner.vue";
+---
+
+<BaseLayout>
+    <div class="h-full grid place-items-center">
+        <ParkourRunner client:visible />
+    </div>
+</BaseLayout>
