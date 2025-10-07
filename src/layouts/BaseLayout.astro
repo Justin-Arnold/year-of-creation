@@ -10,7 +10,7 @@ dayPages.sort((a, b) => {
 
 const currentRoute = Astro.url.pathname
 ---
-<html lang="en">
+<html lang="en" class="bg-neutral-content">
     <head>
         <title>A Year of Creation</title>
         <meta charset="UTF-8">
@@ -28,9 +28,10 @@ const currentRoute = Astro.url.pathname
                 </defs>
             </svg>
         </div>
-        <div class="grow"><slot /></div>
-        
-        <div class="fixed bottom-0 left-0 w-full bg-base-300/20 p-4 gap-2 flex justify-center">
+        <div class="h-full overflow-hidden">
+            <slot />
+        </div>
+        <div class="hidden md:flex fixed bottom-0 left-0 w-full bg-base-300/20 p-4 gap-2 justify-center overflow-auto">
             <a href="/" class={currentRoute === '/' ? 'btn btn-secondary' : 'btn btn-base-300' }>
                 Home
             </a>
@@ -39,6 +40,18 @@ const currentRoute = Astro.url.pathname
                     {page.url?.split('-')[1] }
                 </a>
             ))}
+        </div>
+        <!-- Mobile Navbar -->
+        <div class="md:hidden fixed bottom-0 left-0 w-full bg-base-300/20 p-2 gap-2 flex justify-center overflow-auto">
+            <!-- select with all days -->
+            <select onchange="location = this.value;" class="select select-bordered w-full max-w-xs bg-base-200">
+                <option value="/" selected={currentRoute === '/'}>Home</option>
+                {dayPages.map((page) => (
+                    <option value={page.url} selected={currentRoute === page.url}>
+                        Day {page.url?.split('-')[1] }
+                    </option>
+                ))}
+            </select>
         </div>
     </body>
 </html>
@@ -52,9 +65,6 @@ const currentRoute = Astro.url.pathname
     height: 100vh;
     pointer-events: none;
     z-index: 999;
-
-    /* content: '';
-    background: url('../assets/noise_filter.svg'); */
     opacity: 0.3; /* Adjust opacity as needed */
 }
 </style>
