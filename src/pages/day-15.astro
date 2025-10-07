@@ -1,0 +1,10 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import FriendlyForm from "../components/FriendlyForm.vue";
+---
+
+<BaseLayout>
+    <div class="h-full grid place-items-center">
+        <FriendlyForm client:only />
+    </div>
+</BaseLayout>
